@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+
+        <!-- Babylon.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+    </head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+        class Playground {
+            static CreateScene(engine, canvas) {
+                var scene = new BABYLON.Scene(engine);
+                var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 1.5, -3), scene);
+                camera.setTarget(new BABYLON.Vector3(0, 0.85, 0));
+                camera.attachControl(canvas, true);
+                var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+                light.intensity = 0.7;
+                // Claire:
+                BABYLON.SceneLoader.ImportMesh("", "https://dl.dropbox.com/s/7qfui3v9bpfo27n/", "claire2.glb", scene, function (newMeshes, _particleSystems, skeletons, animationGroups) {
+                    newMeshes[0].rotate(BABYLON.Vector3.Up(), Math.PI);
+                    animationGroups[1].play(true);
+                });
+                // Shoe:
+                BABYLON.SceneLoader.ImportMesh("", "https://dl.dropbox.com/s/w6dhctsidoh1s31/", "shoe.glb", scene, function (newMeshes, _particleSystems, skeletons, animationGroups) {
+                    newMeshes[0].rotate(BABYLON.Vector3.Up(), 35 * Math.PI / 180);
+                    newMeshes[0].scaling = new BABYLON.Vector3(2, 2, 2);
+                    newMeshes[0].position = new BABYLON.Vector3(-0.6, 0, 0);
+                });
+                // Whip:
+                BABYLON.SceneLoader.ImportMesh("", "https://dl.dropbox.com/s/rnw5x90oq1d1w88/", "whip.glb", scene, function (newMeshes, _particleSystems, skeletons, animationGroups) {
+                    newMeshes[0].rotate(BABYLON.Vector3.Up(), -90 * Math.PI / 180);
+                    newMeshes[0].position = new BABYLON.Vector3(-0.2, 0, -0.4);
+                });
+                // Undies:
+                BABYLON.SceneLoader.ImportMesh("", "https://dl.dropbox.com/s/mf59x8li8f0v24w/", "undies.glb", scene, function (newMeshes, _particleSystems, skeletons, animationGroups) {
+                    newMeshes[0].rotate(BABYLON.Vector3.Up(), 155 * Math.PI / 180);
+                    newMeshes[0].position = new BABYLON.Vector3(0.55, 0.15, 0);
+                });
+                // DmitryDzz:
+                BABYLON.SceneLoader.ImportMesh("", "https://dl.dropbox.com/s/t96olpk5s7bl6o4/", "dmitrydzz.glb", scene, function (newMeshes, _particleSystems, skeletons, animationGroups) {
+                    newMeshes[0].rotate(BABYLON.Vector3.Up(), -170 * Math.PI / 180);
+                    newMeshes[0].position = new BABYLON.Vector3(-0.65, 0.45, 0.15);
+                });
+                // Pin board:
+                BABYLON.SceneLoader.ImportMesh("", "https://dl.dropbox.com/s/dp4zdcnhludjwgi/", "pin-board.glb", scene, function (newMeshes, _particleSystems, skeletons, animationGroups) {
+                    const boardMesh = newMeshes[0];
+                    boardMesh.rotate(BABYLON.Vector3.Up(), 180 * Math.PI / 180);
+                    boardMesh.position = new BABYLON.Vector3(0.55, 1.15, 0.5);
+                    const plane = BABYLON.Mesh.CreatePlane("PhotoAlbumMesh", 1, scene);
+                    boardMesh.addChild(plane);
+                    plane.setPositionWithLocalVector(new BABYLON.Vector3(0, 0, -0.01));
+                    const texture = new BABYLON.GUI.AdvancedDynamicTexture("PhotoAlbumAdvancedDynamicTexture", 1024, 1024, scene, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE);
+                    const material = new BABYLON.StandardMaterial("PhotoAlbumAdvancedDynamicTextureMaterial", scene);
+                    material.backFaceCulling = false;
+                    material.diffuseColor = BABYLON.Color3.Black();
+                    material.specularColor = BABYLON.Color3.Black();
+                    const supportPointerMove = true;
+                    const onlyAlphaTesting = false;
+                    if (onlyAlphaTesting) {
+                        material.diffuseTexture = texture;
+                        material.emissiveTexture = texture;
+                        texture.hasAlpha = true;
+                    }
+                    else {
+                        material.emissiveTexture = texture;
+                        material.opacityTexture = texture;
+                    }
+                    plane.material = material;
+                    texture.attachToMesh(plane, supportPointerMove);
+                    Playground._pinPhotoOnBoard(texture, "Photo1", "https://dl.dropbox.com/s/vng45ljjynxw8if/photo1.png", 160, 280, -5);
+                    Playground._pinPhotoOnBoard(texture, "Photo2", "https://dl.dropbox.com/s/7us04fy7lsb0azj/photo2.png", 560, 280, -2);
+                    Playground._pinPhotoOnBoard(texture, "Photo3", "https://dl.dropbox.com/s/vh9e6zteo7fxnvt/photo3.png", 180, 550, 2);
+                    Playground._pinPhotoOnBoard(texture, "Photo4", "https://dl.dropbox.com/s/o7bhbvlo0drdulk/photo4.png", 560, 550, 5);
+                });
+                // Floor:
+                var ground = BABYLON.Mesh.CreateCylinder("ground1", 0.01, 2, 2, 0, 0, scene);
+                ground.position = new BABYLON.Vector3(0, -0.05, 0);
+                const groundMaterial = new BABYLON.StandardMaterial('GroundMaterial', scene);
+                groundMaterial.diffuseColor = new BABYLON.Color3(187.0 / 255.0, 70.0 / 255.0, 75.0 / 255.0);
+                ground.material = groundMaterial;
+                return scene;
+            }
+            static _pinPhotoOnBoard(parentTexture, name, url, left, top, rotation) {
+                const photo = new BABYLON.GUI.Image(name, url);
+                photo.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+                photo.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+                photo.widthInPixels = 300;
+                photo.heightInPixels = 200;
+                photo.leftInPixels = left;
+                photo.topInPixels = top;
+                photo.rotation = rotation * Math.PI / 180;
+                parentTexture.addControl(photo);
+            }
+        }
+        createScene = function() { return Playground.CreateScene(engine, engine.getRenderingCanvas()); }
+                window.initFunction = async function() {               
+                    var asyncEngineCreation = async function() {
+                        try {
+                        return createDefaultEngine();
+                        } catch(e) {
+                        console.log("the available createEngine function failed. Creating the default engine instead");
+                        return createDefaultEngine();
+                        }
+                    }
+
+                    window.engine = await asyncEngineCreation();
+        if (!engine) throw 'engine should not be null.';
+window.scene = createScene();};
+        initFunction().then(() => {sceneToRender = scene        
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
